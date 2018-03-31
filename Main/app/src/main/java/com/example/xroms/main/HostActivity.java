@@ -13,14 +13,10 @@ import android.app.AlertDialog;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
-import android.view.Menu;
-import android.view.MenuItem;
-import android.view.View;
-import android.widget.EditText;
+import android.util.Log;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 
-import com.example.xroms.main.ActionItem;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -32,10 +28,7 @@ import com.microsoft.windowsazure.mobileservices.http.ServiceFilter;
 import com.microsoft.windowsazure.mobileservices.http.ServiceFilterRequest;
 import com.microsoft.windowsazure.mobileservices.http.ServiceFilterResponse;
 import com.microsoft.windowsazure.mobileservices.table.MobileServiceTable;
-import com.microsoft.windowsazure.mobileservices.table.query.Query;
-import com.microsoft.windowsazure.mobileservices.table.query.QueryOperations;
 import com.microsoft.windowsazure.mobileservices.table.sync.MobileServiceSyncContext;
-import com.microsoft.windowsazure.mobileservices.table.sync.MobileServiceSyncTable;
 import com.microsoft.windowsazure.mobileservices.table.sync.localstore.ColumnDataType;
 import com.microsoft.windowsazure.mobileservices.table.sync.localstore.MobileServiceLocalStoreException;
 import com.microsoft.windowsazure.mobileservices.table.sync.localstore.SQLiteLocalStore;
@@ -54,23 +47,13 @@ public class HostActivity extends Activity {
     /**
      * Mobile Service Table used to access data
      */
-    private MobileServiceTable<ActionItem> mToDoTable;
-
-    //Offline Sync
-    /**
-     * Mobile Service Table used to access and Sync data
-     */
-    //private MobileServiceSyncTable<ToDoItem> mToDoTable;
+    private MobileServiceTable<ToDoItem> mActionTable;
 
     /**
      * Adapter to sync the items list with the view
      */
     private ActionItemHostAdapter mAdapter;
 
-    /**
-     * EditText containing the "New To Do" text
-     */
-    private EditText mTextNewToDo;
 
     /**
      * Progress spinner to use for table operations
@@ -81,14 +64,15 @@ public class HostActivity extends Activity {
      * Initializes the activity
      */
 
-    private String sRoomId;
+    private String sId;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_host);
-        sRoomId = "mainroom";
+        sId = "mainroom";
         mProgressBar = (ProgressBar) findViewById(R.id.loadingProgressBar);
+
 
         // Initialize the progress bar
         mProgressBar.setVisibility(ProgressBar.GONE);
@@ -101,43 +85,83 @@ public class HostActivity extends Activity {
                     "https://cowboysvsindians.azurewebsites.net",
                     this).withFilter(new ProgressFilter());
 
-            // Extend timeout from default of 10s to 20s
             mClient.setAndroidHttpClientFactory(new OkHttpClientFactory() {
                 @Override
                 public OkHttpClient createOkHttpClient() {
                     OkHttpClient client = new OkHttpClient();
-                    client.setReadTimeout(20, TimeUnit.SECONDS);
-                    client.setWriteTimeout(20, TimeUnit.SECONDS);
+                    client.setReadTimeout(5, TimeUnit.SECONDS);
+                    client.setWriteTimeout(5, TimeUnit.SECONDS);
                     return client;
                 }
             });
 
             // Get the Mobile Service Table instance to use
 
-            mToDoTable = mClient.getTable(ActionItem.class);
+            Log.e("tagged", "ichanged");
+            mActionTable = mClient.getTable(ToDoItem.class);
 
-            // Offline Sync
-            //mToDoTable = mClient.getSyncTable("ToDoItem", ToDoItem.class);
+            Log.e("tagged", "iconsider");
 
             //Init local storage
             initLocalStore().get();
 
             // Create an adapter to bind the items with the view
             mAdapter = new ActionItemHostAdapter(this, R.layout.single_action_item);
-            ListView listViewToDo = (ListView) findViewById(R.id.listViewToDo);
-            listViewToDo.setAdapter(mAdapter);
+            ListView listViewAction = (ListView) findViewById(R.id.somenameAction);
+            listViewAction.setAdapter(mAdapter);
 
+            addItem();
             // Load the items from the Mobile Service
             refreshItemsFromTable();
+            Log.e("tagged", "idunno");
 
         } catch (MalformedURLException e) {
             createAndShowDialog(new Exception("There was an error creating the Mobile Service. Verify the URL"), "Error");
         } catch (Exception e){
-            createAndShowDialog(e, "Error");
+            createAndShowDialog(e, "Error!!!");
         }
     }
 
-    public void checkItem(final ActionItem item) {
+    public void addItem() {
+        if (mClient == null) {
+            return;
+        }
+
+        // Create a new item
+        final ToDoItem item = new ToDoItem();
+
+        item.setName(sId);
+        item.setIsHost(true);
+        item.setId(sId);
+
+
+        // Insert the new item
+        AsyncTask<Void, Void, Void> task = new AsyncTask<Void, Void, Void>(){
+            @Override
+            protected Void doInBackground(Void... params) {
+                try {
+                    final ToDoItem entity = addItemInTable(item);
+
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            if(!entity.isInMyRoom(sId)){
+                                mAdapter.add(entity);
+                            }
+                        }
+                    });
+                } catch (final Exception e) {
+                    createAndShowDialogFromTask(e, "Error4");
+                }
+                return null;
+            }
+        };
+
+        runAsyncTask(task);
+    }
+
+
+    public void checkItem(final ToDoItem item) {
         if (mClient == null) {
             return;
         }
@@ -150,13 +174,13 @@ public class HostActivity extends Activity {
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            if (item.isInMyRoom(sRoomId)) {
+                            if (!item.isInMyRoom(sId)) {
                                 mAdapter.remove(item);
                             }
                         }
                     });
                 } catch (final Exception e) {
-                    createAndShowDialogFromTask(e, "Error");
+                    createAndShowDialogFromTask(e, "Error3");
                 }
 
                 return null;
@@ -195,52 +219,10 @@ public class HostActivity extends Activity {
      * @param item
      *            The item to mark
      */
-    public void checkItemInTable(ActionItem item) throws ExecutionException, InterruptedException {
-        mToDoTable.update(item).get();
+    public void checkItemInTable(ToDoItem item) throws ExecutionException, InterruptedException {
+        mActionTable.update(item).get();
     }
 
-    /**
-     * Add a new item
-     *
-     * @param view
-     *            The view that originated the call
-     */
-    public void addItem(View view) {
-        if (mClient == null) {
-            return;
-        }
-
-        // Create a new item
-        final ActionItem item = new ActionItem();
-
-        item.setName(mTextNewToDo.getText().toString());
-
-        // Insert the new item
-        AsyncTask<Void, Void, Void> task = new AsyncTask<Void, Void, Void>(){
-            @Override
-            protected Void doInBackground(Void... params) {
-                try {
-                    final ActionItem entity = addItemInTable(item);
-
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            if(!entity.isInMyRoom(sRoomId)){
-                                mAdapter.add(entity);
-                            }
-                        }
-                    });
-                } catch (final Exception e) {
-                    createAndShowDialogFromTask(e, "Error");
-                }
-                return null;
-            }
-        };
-
-        runAsyncTask(task);
-
-        mTextNewToDo.setText("");
-    }
 
     /**
      * Add an item to the Mobile Service Table
@@ -248,8 +230,9 @@ public class HostActivity extends Activity {
      * @param item
      *            The item to Add
      */
-    public ActionItem addItemInTable(ActionItem item) throws ExecutionException, InterruptedException {
-        ActionItem entity = mToDoTable.insert(item).get();
+    public ToDoItem addItemInTable(ToDoItem item) throws ExecutionException, InterruptedException {
+        mActionTable.delete(item);
+        ToDoItem entity = mActionTable.insert(item).get();
         return entity;
     }
 
@@ -266,20 +249,20 @@ public class HostActivity extends Activity {
             protected Void doInBackground(Void... params) {
 
                 try {
-                    final List<ActionItem> results = refreshItemsFromMobileServiceTable();
-
+                    final List<ToDoItem> results = refreshItemsFromMobileServiceTable();
+                    //Log.e("tagged1", Integer.toString(results.size()));
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
                             mAdapter.clear();
 
-                            for (ActionItem item : results) {
+                            for (ToDoItem item : results) {
                                 mAdapter.add(item);
                             }
                         }
                     });
                 } catch (final Exception e){
-                    createAndShowDialogFromTask(e, "Error");
+                    createAndShowDialogFromTask(e, "Error2");
                 }
 
                 return null;
@@ -293,9 +276,8 @@ public class HostActivity extends Activity {
      * Refresh the list with the items in the Mobile Service Table
      */
 
-    private List<ActionItem> refreshItemsFromMobileServiceTable() throws ExecutionException, InterruptedException {
-        return mToDoTable.where().field("complete").
-                eq(val(false)).execute().get();
+    private List<ToDoItem> refreshItemsFromMobileServiceTable() throws ExecutionException, InterruptedException {
+        return mActionTable.where().field("id").eq(sId).execute().get();
     }
 
 
@@ -321,9 +303,9 @@ public class HostActivity extends Activity {
                     SQLiteLocalStore localStore = new SQLiteLocalStore(mClient.getContext(), "OfflineStore", null, 1);
 
                     Map<String, ColumnDataType> tableDefinition = new HashMap<String, ColumnDataType>();
+                    tableDefinition.put("name", ColumnDataType.String);
                     tableDefinition.put("id", ColumnDataType.String);
-                    tableDefinition.put("text", ColumnDataType.String);
-                    tableDefinition.put("complete", ColumnDataType.Boolean);
+                    tableDefinition.put("isHost", ColumnDataType.Boolean);
 
                     localStore.defineTable("ToDoItem", tableDefinition);
 
@@ -332,7 +314,7 @@ public class HostActivity extends Activity {
                     syncContext.initialize(localStore, handler).get();
 
                 } catch (final Exception e) {
-                    createAndShowDialogFromTask(e, "Error");
+                    createAndShowDialogFromTask(e, "Error1");
                 }
 
                 return null;
@@ -350,11 +332,11 @@ public class HostActivity extends Activity {
      * @param title
      *            The dialog title
      */
-    private void createAndShowDialogFromTask(final Exception exception, String title) {
+    private void createAndShowDialogFromTask(final Exception exception, final String title) {
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                createAndShowDialog(exception, "Error");
+                createAndShowDialog(exception, title);
             }
         });
     }

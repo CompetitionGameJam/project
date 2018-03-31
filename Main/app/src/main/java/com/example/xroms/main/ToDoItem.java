@@ -4,12 +4,11 @@ package com.example.xroms.main;
  * Created by xRoms on 31.03.2018.
  */
 
-public class ActionItem {
+public class ToDoItem {
 
 
-
-    @com.google.gson.annotations.SerializedName("roomid")
-    private String mRoomId;
+    @com.google.gson.annotations.SerializedName("id")
+    private String mId;
 
     @com.google.gson.annotations.SerializedName("ishost")
     private boolean mIsHost;
@@ -17,7 +16,7 @@ public class ActionItem {
     @com.google.gson.annotations.SerializedName("name")
     private String mName;
 
-    public ActionItem() {
+    public ToDoItem() {
 
     }
 
@@ -26,9 +25,9 @@ public class ActionItem {
         return getName();
     }
 
-    public ActionItem(String name, String roomId, boolean isHost) {
+    public ToDoItem(String name, String id, boolean isHost) {
         this.setName(name);
-        this.setRoomId(roomId);
+        this.setId(id);
         this.setIsHost(isHost);
     }
 
@@ -51,8 +50,8 @@ public class ActionItem {
     /**
      * Returns the item id
      */
-    public String getRoomId() {
-        return mRoomId;
+    public String getId() {
+        return mId;
     }
 
     /**
@@ -60,8 +59,8 @@ public class ActionItem {
      *
      * @param id id to set
      */
-    public final void setRoomId(String id) {
-        mRoomId = id;
+    public final void setId(String id) {
+        mId = id;
     }
 
     /**
@@ -71,8 +70,8 @@ public class ActionItem {
         return mIsHost;
     }
 
-    public boolean isInMyRoom(String roomId) {
-        return mRoomId.equals(roomId);
+    public boolean isInMyRoom(String id) {
+        return mId.equals(id);
     }
 
     /**

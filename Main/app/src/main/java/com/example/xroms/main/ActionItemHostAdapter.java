@@ -7,13 +7,12 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
-import android.widget.CheckBox;
 import android.widget.TextView;
 
 /**
  * Adapter to bind a ToDoItem List to a view
  */
-public class ActionItemHostAdapter extends ArrayAdapter<ActionItem> {
+public class ActionItemHostAdapter extends ArrayAdapter<ToDoItem> {
 
     /**
      * Adapter context
@@ -39,7 +38,7 @@ public class ActionItemHostAdapter extends ArrayAdapter<ActionItem> {
     public View getView(int position, View convertView, ViewGroup parent) {
         View row = convertView;
 
-        final ActionItem currentItem = getItem(position);
+        final ToDoItem currentItem = getItem(position);
 
         if (row == null) {
             LayoutInflater inflater = ((Activity) mContext).getLayoutInflater();
