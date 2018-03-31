@@ -34,5 +34,13 @@ public class NewJoinActivity extends FullScreenActivity {
                 startActivity(myIntent);
             }
         });
+        join.setOnClickListener(new View.OnClickListener()
+        {
+            @Override
+            public void onClick(View view) {
+                Intent myIntent = new Intent(NewJoinActivity.this, MapSetActivity.class);
+                startActivity(myIntent);
+            }
+        });
     }
 }
