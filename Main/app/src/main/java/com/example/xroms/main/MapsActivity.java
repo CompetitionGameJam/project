@@ -14,10 +14,12 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MapStyleOptions;
 import com.google.android.gms.maps.model.MarkerOptions;
 
-public class MapsActivity extends AppCompatActivity
+public class MapsActivity extends FullScreenActivity
         implements OnMapReadyCallback {
 
     private static final String TAG = MapsActivity.class.getSimpleName();
+    private LatLng spb = new LatLng(59,30);
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,6 +56,7 @@ public class MapsActivity extends AppCompatActivity
             Log.e(TAG, "Can't find style. Error: ", e);
         }
         // Position the map's camera near Sydney, Australia.
-        googleMap.moveCamera(CameraUpdateFactory.newLatLng(new LatLng(-34, 151)));
+        googleMap.moveCamera(CameraUpdateFactory.newLatLng(spb));
+        googleMap.moveCamera(CameraUpdateFactory.zoomTo(10));
     }
 }
