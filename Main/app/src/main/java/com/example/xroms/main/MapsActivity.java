@@ -12,6 +12,7 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MapStyleOptions;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
 public class MapsActivity extends FullScreenActivity
@@ -19,7 +20,7 @@ public class MapsActivity extends FullScreenActivity
 
     private static final String TAG = MapsActivity.class.getSimpleName();
     private LatLng spb = new LatLng(59,30);
-
+    private Marker baseA, baseB;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,5 +59,7 @@ public class MapsActivity extends FullScreenActivity
         // Position the map's camera near Sydney, Australia.
         googleMap.moveCamera(CameraUpdateFactory.newLatLng(spb));
         googleMap.moveCamera(CameraUpdateFactory.zoomTo(10));
+
+
     }
 }
