@@ -10,6 +10,8 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptor;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MapStyleOptions;
 import com.google.android.gms.maps.model.Marker;
@@ -27,7 +29,7 @@ public class MapsActivity extends FullScreenActivity
         super.onCreate(savedInstanceState);
         // Retrieve the content view that renders the map.
         setContentView(R.layout.activity_maps);
-
+        setMContentView(findViewById(R.id.map));
         // Get the SupportMapFragment and register for the callback
         // when the map is ready for use.
         SupportMapFragment mapFragment =
@@ -58,8 +60,8 @@ public class MapsActivity extends FullScreenActivity
         }
         // Position the map's camera near Sydney, Australia.
         googleMap.moveCamera(CameraUpdateFactory.newLatLng(spb));
-        googleMap.moveCamera(CameraUpdateFactory.zoomTo(10));
+        googleMap.moveCamera(CameraUpdateFactory.zoomTo(13));
 
-
+        baseA = googleMap.addMarker(new MarkerOptions().position(spb).icon(BitmapDescriptorFactory.fromResource(R.mipmap.ic_base_a)));
     }
 }
