@@ -91,10 +91,10 @@ public class MapsActivity extends FullScreenActivity implements
         players.put(name, val);
     }
 
-    private void onMarkersResresh(List<Pair<String,LatLng>> markers){
-        for(Pair<String, LatLng> i : markers){
-            if(!players.containsKey(i.first)) onNewMarker(i.first,i.second);
-            else onMarkersRefresh(i.first, i.second);
+    private void onMarkersResresh(List<ToDoItem> markers){
+        for(ToDoItem i : markers){
+            if(!players.containsKey(i.getName())) onNewMarker(i.getName(), new LatLng(i.getPosition1(), i.getPosition2()));
+            else onMarkersRefresh(i.getName(), new LatLng(i.getPosition1(), i.getPosition2()));
         }
     }
 
@@ -190,7 +190,7 @@ public class MapsActivity extends FullScreenActivity implements
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-
+                            onMarkersResresh(results);
                         }
                     });
                 } catch (final Exception e){
