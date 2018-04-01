@@ -249,7 +249,7 @@ public class MapsActivity extends FullScreenActivity implements
         if (null != mCurrentLocation) {
             updatePosition();
             LatLng cur_loc = new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude());
-            if(self == null) self = mMap.addMarker(new MarkerOptions().position(cur_loc));
+            if(self == null) self = mMap.addMarker(new MarkerOptions().position(cur_loc).icon(BitmapDescriptorFactory.fromResource(R.mipmap.ic_self_a)));
             else self.setPosition(cur_loc);
 
         } else {

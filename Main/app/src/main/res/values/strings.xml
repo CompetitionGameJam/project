@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Main</string>
+    <string name="app_name">Cowboy VS Indiance</string>
     <string name="title_activity_maps">Map</string>
     <string name="textview_text">hehexd</string>
     <string name="service_title">Your Room</string>

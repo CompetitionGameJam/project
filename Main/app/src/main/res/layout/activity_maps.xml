@@ -73,7 +73,7 @@
                 android:layout_weight="1"
                 android:fontFamily="@font/font1"
                 android:gravity="right|center"
-                android:text="TextView"
+                android:text="Dima"
                 android:textColor="@color/gray"
                 android:textSize="24sp"
                 tools:text="Name" />
