@@ -78,7 +78,7 @@ public class MapsActivity extends FullScreenActivity implements
     LocationRequest mLocationRequest;
     private GoogleMap mMap;
     public static LatLng locBaseA, locBaseB, cur, l, r;
-    Marker a, b;
+    Marker a, b, self;
     HashMap<String, Marker> players;
 
     private void onMarkersRefresh(String name, LatLng loc){
@@ -249,6 +249,8 @@ public class MapsActivity extends FullScreenActivity implements
         if (null != mCurrentLocation) {
             updatePosition();
             LatLng cur_loc = new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude());
+            if(self == null) self = mMap.addMarker(new MarkerOptions().position(cur_loc));
+            else self.setPosition(cur_loc);
 
         } else {
             Log.d(TAG, "location is null ...............");
