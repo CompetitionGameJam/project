@@ -13,10 +13,11 @@
         android:background="@drawable/background"
         android:orientation="vertical">
 
-        <com.google.android.gms.maps.MapView
+        <fragment
             android:id="@+id/mapSet"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
+            android:name="com.google.android.gms.maps.SupportMapFragment"
             android:layout_margin="10dp"
             android:layout_weight="2" />
 
