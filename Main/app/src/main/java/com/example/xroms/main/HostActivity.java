@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -85,16 +86,8 @@ public class HostActivity extends Activity {
             @Override
             public void onClick(View v) {
                 refreshItemsFromTable();
-                /*try {
-                    if (mActionTable.where().field("id").eq(sId).field("gamestarted").eq(val(true)).execute().get().size() != 0) {
-                        Intent jnewIntent = new Intent(HostActivity.this, MapsActivity.class);
-                        startActivity(jnewIntent);
-                    }
-                } catch(InterruptedException e) {
-                    Log.e("error!", e.getMessage());
-                } catch (ExecutionException e) {
-                    Log.e("error?", e.getMessage());
-                }*/
+
+                tryToStartGame();
             }
         };
         refresh.setOnClickListener(refreshClick);
@@ -164,6 +157,37 @@ public class HostActivity extends Activity {
         } catch (Exception e){
             createAndShowDialog(e, "Error!!!");
         }
+    }
+
+
+    private List<ToDoItem> checkIsGameStarted() throws ExecutionException, InterruptedException {
+        return mActionTable.where().field("gamestarted").eq(val(true)).and(mActionTable.where().field("name").eq(sId)).execute().get();
+    }
+
+
+    private void tryToStartGame() {
+        AsyncTask<Void, Void, Void> task = new AsyncTask<Void, Void, Void>(){
+            @Override
+            protected Void doInBackground(Void... params) {
+
+                try {
+                    final List<ToDoItem> results = checkIsGameStarted();
+                    //Log.e("tagged1", Integer.toString(results.size()));
+                    if (!results.isEmpty()) {
+                        Log.e("tagged", "wht");
+                        Intent jnewIntent = new Intent(HostActivity.this, MapsActivity.class);
+                        startActivity(jnewIntent);
+                    }
+                } catch (final Exception e){
+                    createAndShowDialogFromTask(e, "Error2");
+                }
+
+                return null;
+            }
+        };
+
+        runAsyncTask(task);
+
     }
 
     public void addItem() {
