@@ -164,7 +164,7 @@ public class HostActivity extends Activity {
             public void run() {
                 while (true) {
                     try {
-                        wait(10000);
+                        Thread.sleep(10000);
                     } catch (InterruptedException e) {
                         Log.e("qq", e.getMessage());
                     }
