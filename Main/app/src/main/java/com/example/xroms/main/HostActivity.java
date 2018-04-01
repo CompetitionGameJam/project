@@ -158,6 +158,20 @@ public class HostActivity extends Activity {
         } catch (Exception e){
             createAndShowDialog(e, "Error!!!");
         }
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                while (true) {
+                    try {
+                        wait(10000);
+                    } catch (InterruptedException e) {
+                        Log.e("qq", e.getMessage());
+                    }
+                    refreshItemsFromTable();
+                }
+            }
+        }).start();
     }
 
 
