@@ -19,6 +19,7 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.util.Pair;
 import android.view.View;
 import android.widget.Button;
 
@@ -44,6 +45,10 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnSuccessListener;
 
+import java.lang.reflect.Array;
+import java.util.HashMap;
+import java.util.List;
+
 public class MapsActivity extends FullScreenActivity implements
         com.google.android.gms.location.LocationListener,
         GoogleApiClient.ConnectionCallbacks,
@@ -56,6 +61,24 @@ public class MapsActivity extends FullScreenActivity implements
     private GoogleMap mMap;
     public static LatLng locBaseA, locBaseB, cur, l, r;
     Marker a, b;
+    HashMap<String, Marker> players;
+
+    private void onMarkersRefresh(String name, LatLng loc){
+        Marker v = players.get(name);
+        v.setPosition(loc);
+    }
+
+    private void onNewMarker(String name, LatLng loc){
+        Marker val = mMap.addMarker(new MarkerOptions().position(loc).icon(BitmapDescriptorFactory.fromResource(R.drawable.cowboy1)));
+        players.put(name, val);
+    }
+
+    private void onMarkersResresh(List<Pair<String,LatLng>> markers){
+        for(Pair<String, LatLng> i : markers){
+            if(!players.containsKey(i.first)) onNewMarker(i.first,i.second);
+            else onMarkersRefresh(i.first, i.second);
+        }
+    }
 
     @SuppressLint("RestrictedApi")
     protected void createLocationRequest() {
