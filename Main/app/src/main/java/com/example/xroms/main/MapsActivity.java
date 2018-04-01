@@ -11,6 +11,8 @@ import android.content.res.Resources;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.os.AsyncTask;
+import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
@@ -43,11 +45,27 @@ import com.google.android.gms.maps.model.MapStyleOptions;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.microsoft.windowsazure.mobileservices.MobileServiceClient;
+import com.microsoft.windowsazure.mobileservices.http.OkHttpClientFactory;
+import com.microsoft.windowsazure.mobileservices.table.MobileServiceTable;
+import com.squareup.okhttp.OkHttpClient;
+
+import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
 public class MapsActivity extends FullScreenActivity implements
         com.google.android.gms.location.LocationListener,
         GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener, OnMapReadyCallback {
+
+
+    private String roomId;
+    private String yourname;
+
+    private MobileServiceClient mClient;
+
+    private MobileServiceTable<ToDoItem> mActionTable;
 
     private static final String TAG = MapsActivity.class.getSimpleName();
     private GoogleApiClient mGoogleApiClient;
@@ -73,6 +91,33 @@ public class MapsActivity extends FullScreenActivity implements
         setContentView(R.layout.activity_maps);
         setMContentView(findViewById(R.id.map));
 
+        roomId = getIntent().getStringExtra("id");
+        yourname = getIntent().getStringExtra("name");
+
+        try {
+            // Create the Mobile Service Client instance, using the provided
+
+            // Mobile Service URL and key
+            mClient = new MobileServiceClient(
+                    "https://cowboysvsindians.azurewebsites.net",
+                    MapsActivity.this);
+
+            mClient.setAndroidHttpClientFactory(new OkHttpClientFactory() {
+                @Override
+                public OkHttpClient createOkHttpClient() {
+                    OkHttpClient client = new OkHttpClient();
+                    client.setReadTimeout(5, TimeUnit.SECONDS);
+                    client.setWriteTimeout(5, TimeUnit.SECONDS);
+                    return client;
+                }
+            });
+        } catch (Exception e) {
+            Log.e("tagged", e.getMessage());
+        }
+
+        // Get the Mobile Service Table instance to use
+        mActionTable = mClient.getTable(ToDoItem.class);
+
 
         if (!isGooglePlayServicesAvailable()) {
             finish();
@@ -91,12 +136,68 @@ public class MapsActivity extends FullScreenActivity implements
                         .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
         updateMap();
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                while (true) {
+                    try {
+                        Thread.sleep(3000);
+                    } catch (InterruptedException e) {
+                        Log.e("qq", e.getMessage());
+                    }
+                    refreshItemsFromTable();
+                }
+            }
+        }).start();
     }
 
+
+    private List<ToDoItem> refreshPlayers() throws ExecutionException, InterruptedException {
+        return mActionTable.where().field("id").not().eq(yourname).and(mActionTable.where().field("name").eq(roomId)).execute().get();
+    }
+
+    private void refreshItemsFromTable() {
+        AsyncTask<Void, Void, Void> task = new AsyncTask<Void, Void, Void>(){
+            @Override
+            protected Void doInBackground(Void... params) {
+
+                try {
+                    final List<ToDoItem> results = refreshPlayers();
+                    //Log.e("tagged1", Integer.toString(results.size()));
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+
+                        }
+                    });
+                } catch (final Exception e){
+                    Log.e("tagged", e.getMessage());
+                }
+
+                return null;
+            }
+        };
+
+        runAsyncTask(task);
+    }
+
+    private AsyncTask<Void, Void, Void> runAsyncTask(AsyncTask<Void, Void, Void> task) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
+            return task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+        } else {
+            return task.execute();
+        }
+    }
 
     private void updateMap() {
         Log.d(TAG, "Map update initiated .............");
         if (null != mCurrentLocation) {
+            ToDoItem newitem =  new ToDoItem();
+            newitem.setName(roomId);
+            newitem.setId(yourname);
+            newitem.setPosition1(mCurrentLocation.getLatitude());
+            newitem.setPosition2(mCurrentLocation.getLongitude());
+            mActionTable.update(newitem);
             LatLng cur_loc = new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude());
 
         } else {

@@ -133,6 +133,8 @@ public class JoinActivity extends Activity {
                     Intent newInent = new Intent(JoinActivity.this, HostActivity.class);
                     newInent.putExtra("fromjoin", true);
                     newInent.putExtra("name", listViewAction.getItemAtPosition(position).toString());
+                    newInent.putExtra("truename", jName);
+
                     startActivity(newInent);
                 }
             });

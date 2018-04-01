@@ -70,6 +70,7 @@ public class HostActivity extends Activity {
      */
 
     private String sId;
+    private String name;
     private boolean isFromJoin;
 
     private Button refresh;
@@ -92,6 +93,7 @@ public class HostActivity extends Activity {
         };
         refresh.setOnClickListener(refreshClick);
         sId = getIntent().getStringExtra("name");
+        name = getIntent().getStringExtra("truename");
         isFromJoin = getIntent().getBooleanExtra("fromjoin", false);
         mProgressBar = (ProgressBar) findViewById(R.id.loadingProgressBar);
 
@@ -145,6 +147,7 @@ public class HostActivity extends Activity {
                         mActionTable.update(item);*/
                         Intent newIntent = new Intent(HostActivity.this, MapSetActivity.class);
                         newIntent.putExtra("id", sId);
+                        newIntent.putExtra("name", sId);
                         startActivity(newIntent);
                     }
                 });
@@ -191,6 +194,8 @@ public class HostActivity extends Activity {
                     if (!results.isEmpty()) {
                         Log.e("tagged", "wht");
                         Intent jnewIntent = new Intent(HostActivity.this, MapsActivity.class);
+                        jnewIntent.putExtra("id", sId);
+                        jnewIntent.putExtra("name", sId);
                         startActivity(jnewIntent);
                     }
                 } catch (final Exception e){

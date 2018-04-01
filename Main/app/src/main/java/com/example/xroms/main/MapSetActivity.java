@@ -95,10 +95,14 @@ public class MapSetActivity extends FullScreenActivity implements
                     item.setGameStarted(true);
                     item.setIsHost(true);
                     item.setName(roomId);
-                    item.setaBase(a.getPosition());
-                    item.setbBase(b.getPosition());
-                    item.setlBorder(l.getPosition());
-                    item.setrBorder(r.getPosition());
+                    item.setaBase1(a.getPosition().latitude);
+                    item.setaBase2(a.getPosition().longitude);
+                    item.setbBase1(b.getPosition().latitude);
+                    item.setbBase2(b.getPosition().longitude);
+                    item.setrBorder1(r.getPosition().latitude);
+                    item.setrBorder2(r.getPosition().longitude);
+                    item.setlBorder1(l.getPosition().latitude);
+                    item.setlBorder2(l.getPosition().longitude);
                     mActionTable.update(item);
                 }
                 catch (final Exception e) {
@@ -106,6 +110,7 @@ public class MapSetActivity extends FullScreenActivity implements
                 }
 
                 Intent myIntent = new Intent(MapSetActivity.this, MapsActivity.class);
+                myIntent.putExtra("id", roomId);
                 startActivity(myIntent);
             }
         });
