@@ -30,6 +30,10 @@
             android:id="@+id/btnStart"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
+            android:background="@drawable/button_blue"
+            android:textSize="24dp"
+            android:textColor="@color/white"
+            android:fontFamily="@font/font1"
             android:layout_margin="10dp"
             android:layout_weight="4"
             android:text="Start" />
