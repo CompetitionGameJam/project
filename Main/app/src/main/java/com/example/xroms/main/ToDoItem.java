@@ -10,11 +10,15 @@ public class ToDoItem {
     @com.google.gson.annotations.SerializedName("id")
     private String mId;
 
-    @com.google.gson.annotations.SerializedName("ishost")
+    @com.google.gson.annotations.SerializedName("isHost")
     private boolean mIsHost;
+
+    @com.google.gson.annotations.SerializedName("gamestarted")
+    private boolean mGameStarted;
 
     @com.google.gson.annotations.SerializedName("name")
     private String mName;
+
 
     public ToDoItem() {
 
@@ -25,10 +29,19 @@ public class ToDoItem {
         return getName();
     }
 
-    public ToDoItem(String name, String id, boolean isHost) {
+    public ToDoItem(String name, String id, boolean isHost, boolean gameStarted) {
         this.setName(name);
         this.setId(id);
         this.setIsHost(isHost);
+        this.setGameStarted(gameStarted);
+    }
+
+    public void setGameStarted(boolean gameStarted) {
+        mGameStarted = gameStarted;
+    }
+
+    public boolean getGameStarted() {
+        return mGameStarted;
     }
 
     /**
