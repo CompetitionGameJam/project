@@ -1,7 +1,6 @@
 package com.example.xroms.main;
 
 
-import java.io.IOException;
 import java.net.MalformedURLException;
 import java.util.HashMap;
 import java.util.List;
@@ -11,13 +10,16 @@ import java.util.concurrent.TimeUnit;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.LauncherActivity;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 
@@ -41,7 +43,7 @@ import com.squareup.okhttp.OkHttpClient;
 
 import static com.microsoft.windowsazure.mobileservices.table.query.QueryOperations.*;
 
-public class HostActivity extends Activity {
+public class JoinActivity extends Activity {
 
     /**
      * Mobile Service Client reference
@@ -68,39 +70,24 @@ public class HostActivity extends Activity {
      * Initializes the activity
      */
 
-    private String sId;
-    private boolean isFromJoin;
-
     private Button refresh;
-    private Button startGame;
+
+    private String jName;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_host);
-        startGame = (Button) findViewById(R.id.startGameButton);
-        startGame.setEnabled(false);
-        refresh = (Button) findViewById(R.id.hRefreshButton);
+        setContentView(R.layout.activity_join);
+        refresh = (Button) findViewById(R.id.refreshButton);
         View.OnClickListener refreshClick = new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                refreshItemsFromTable();
-                /*try {
-                    if (mActionTable.where().field("id").eq(sId).field("gamestarted").eq(val(true)).execute().get().size() != 0) {
-                        Intent jnewIntent = new Intent(HostActivity.this, MapsActivity.class);
-                        startActivity(jnewIntent);
-                    }
-                } catch(InterruptedException e) {
-                    Log.e("error!", e.getMessage());
-                } catch (ExecutionException e) {
-                    Log.e("error?", e.getMessage());
-                }*/
+                refreshItemsFromTable(null);
             }
         };
         refresh.setOnClickListener(refreshClick);
-        sId = getIntent().getStringExtra("name");
-        isFromJoin = getIntent().getBooleanExtra("fromjoin", false);
-        mProgressBar = (ProgressBar) findViewById(R.id.loadingProgressBar);
+        jName = getIntent().getStringExtra("name");
+        mProgressBar = (ProgressBar) findViewById(R.id.jLoadingProgressBar);
 
 
         // Initialize the progress bar
@@ -136,27 +123,22 @@ public class HostActivity extends Activity {
 
             // Create an adapter to bind the items with the view
             mAdapter = new ActionItemHostAdapter(this, R.layout.single_action_item);
-            ListView listViewAction = (ListView) findViewById(R.id.somenameAction);
+            final ListView listViewAction = (ListView) findViewById(R.id.jSomenameAction);
             listViewAction.setAdapter(mAdapter);
-            if (!isFromJoin) {
-                addItem();
-                startGame.setEnabled(true);
-                startGame.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        final ToDoItem item = new ToDoItem();
-                        item.setName(sId);
-                        item.setIsHost(true);
-                        item.setId(sId);
-                        item.setGameStarted(true);
-                        mActionTable.update(item);
-                        Intent newIntent = new Intent(HostActivity.this, MapsActivity.class);
-                        startActivity(newIntent);
-                    }
-                });
-            }
+            listViewAction.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                @Override
+                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                    Log.e("tagged", listViewAction.getItemAtPosition(position).toString());
+                    addItem(listViewAction.getItemAtPosition(position).toString());
+                    Intent newInent = new Intent(JoinActivity.this, HostActivity.class);
+                    newInent.putExtra("fromjoin", true);
+                    newInent.putExtra("name", jName);
+                    startActivity(newInent);
+                }
+            });
+
             // Load the items from the Mobile Service
-            refreshItemsFromTable();
+            refreshItemsFromTable(null);
             Log.e("tagged", "idunno");
 
         } catch (MalformedURLException e) {
@@ -166,7 +148,7 @@ public class HostActivity extends Activity {
         }
     }
 
-    public void addItem() {
+    public void addItem(String connectto) {
         if (mClient == null) {
             return;
         }
@@ -174,9 +156,9 @@ public class HostActivity extends Activity {
         // Create a new item
         final ToDoItem item = new ToDoItem();
 
-        item.setName(sId);
-        item.setIsHost(true);
-        item.setId(sId);
+        item.setName(connectto);
+        item.setIsHost(false);
+        item.setId(jName);
         item.setGameStarted(false);
 
 
@@ -190,7 +172,7 @@ public class HostActivity extends Activity {
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            if(!entity.isInMyRoom(sId)){
+                            if(entity.getIsHost()){
                                 mAdapter.add(entity);
                             }
                         }
@@ -219,7 +201,7 @@ public class HostActivity extends Activity {
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            if (!item.isInMyRoom(sId)) {
+                            if (!item.getIsHost()) {
                                 mAdapter.remove(item);
                             }
                         }
@@ -284,7 +266,7 @@ public class HostActivity extends Activity {
     /**
      * Refresh the list with the items in the Table
      */
-    private void refreshItemsFromTable() {
+    private void refreshItemsFromTable(View v) {
 
         // Get the items that weren't marked as completed and add them in the
         // adapter
@@ -320,9 +302,8 @@ public class HostActivity extends Activity {
     /**
      * Refresh the list with the items in the Mobile Service Table
      */
-
     private List<ToDoItem> refreshItemsFromMobileServiceTable() throws ExecutionException, InterruptedException {
-        return mActionTable.where().field("name").eq(sId).execute().get();
+        return mActionTable.where().field("isHost").eq(val(true)).execute().get();
     }
 
 
@@ -474,4 +455,6 @@ public class HostActivity extends Activity {
             return resultFuture;
         }
     }
+
+
 }

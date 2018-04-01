@@ -47,7 +47,7 @@ public class ActionItemHostAdapter extends ArrayAdapter<ToDoItem> {
 
         row.setTag(currentItem);
         final TextView textView = (TextView) row.findViewById(R.id.hostAdapterActionItem);
-        textView.setText(currentItem.getName());
+        textView.setText(currentItem.getId());
         textView.setEnabled(true);
 
         textView.setOnClickListener(new View.OnClickListener() {

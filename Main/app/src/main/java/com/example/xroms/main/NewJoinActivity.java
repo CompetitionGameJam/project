@@ -5,6 +5,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 
 public class NewJoinActivity extends FullScreenActivity {
 
@@ -13,6 +14,8 @@ public class NewJoinActivity extends FullScreenActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_new_join);
         setMContentView(findViewById(R.id.llContentNJ));
+
+        final EditText name = (EditText)findViewById(R.id.etName);
 
         Button back = findViewById(R.id.btnNJBack);
         back.setOnClickListener(new View.OnClickListener()
@@ -31,6 +34,8 @@ public class NewJoinActivity extends FullScreenActivity {
             @Override
             public void onClick(View view) {
                 Intent myIntent = new Intent(NewJoinActivity.this, HostActivity.class);
+                myIntent.putExtra("name", name.getText().toString());
+                myIntent.putExtra("fromjoin", false);
                 startActivity(myIntent);
             }
         });
@@ -38,7 +43,8 @@ public class NewJoinActivity extends FullScreenActivity {
         {
             @Override
             public void onClick(View view) {
-                Intent myIntent = new Intent(NewJoinActivity.this, MapSetActivity.class);
+                Intent myIntent = new Intent(NewJoinActivity.this, JoinActivity.class);
+                myIntent.putExtra("name", name.getText().toString());
                 startActivity(myIntent);
             }
         });
