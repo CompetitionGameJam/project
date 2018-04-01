@@ -34,13 +34,22 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MapStyleOptions;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.microsoft.windowsazure.mobileservices.MobileServiceClient;
+import com.microsoft.windowsazure.mobileservices.table.MobileServiceTable;
 
+import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ExecutionException;
+
 
 public class MapSetActivity extends FullScreenActivity implements
         com.google.android.gms.location.LocationListener,
         GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener, OnMapReadyCallback, GoogleMap.OnMarkerDragListener {
+
+
+    private MobileServiceClient mClient;
+    private MobileServiceTable<ToDoItem> mActionTable;
 
     private static final String TAG = MapSetActivity.class.getSimpleName();
     private GoogleApiClient mGoogleApiClient;
@@ -58,13 +67,15 @@ public class MapSetActivity extends FullScreenActivity implements
         mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
     }
 
-
+    private String roomId;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         Log.d(TAG, "onCreate ...............................");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_map_set);
         setMContentView(findViewById(R.id.llContentMS));
+
+        roomId = getIntent().getStringExtra("id");
 
         if (PackageManager.PERMISSION_GRANTED != ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION))
             requestWritePermission(this);
@@ -74,6 +85,22 @@ public class MapSetActivity extends FullScreenActivity implements
         start.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                try {
+                    mClient = new MobileServiceClient(
+                            "https://cowboysvsindians.azurewebsites.net",
+                            MapSetActivity.this);
+                    mActionTable = mClient.getTable(ToDoItem.class);
+                    ToDoItem item = new ToDoItem();
+                    item.setId(roomId);
+                    item.setGameStarted(true);
+                    item.setIsHost(true);
+                    item.setName(roomId);
+                    mActionTable.update(item);
+                }
+                catch (final Exception e) {
+                    Log.e("error!", e.getMessage());
+                }
+
                 Intent myIntent = new Intent(MapSetActivity.this, MapsActivity.class);
                 startActivity(myIntent);
             }

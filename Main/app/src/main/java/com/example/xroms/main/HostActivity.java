@@ -138,12 +138,13 @@ public class HostActivity extends Activity {
                     @Override
                     public void onClick(View v) {
                         final ToDoItem item = new ToDoItem();
-                        item.setName(sId);
+                        /*item.setName(sId);
                         item.setIsHost(true);
                         item.setId(sId);
                         item.setGameStarted(true);
-                        mActionTable.update(item);
-                        Intent newIntent = new Intent(HostActivity.this, MapsActivity.class);
+                        mActionTable.update(item);*/
+                        Intent newIntent = new Intent(HostActivity.this, MapSetActivity.class);
+                        newIntent.putExtra("id", sId);
                         startActivity(newIntent);
                     }
                 });
@@ -259,27 +260,6 @@ public class HostActivity extends Activity {
         runAsyncTask(task);
 
     }
-
-    /**
-     * Initializes the activity menu
-     */
-    /*@Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.activity_main, menu);
-        return true;
-    }*/
-
-    /**
-     * Select an option from the menu
-     */
-    /*@Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        if (item.getItemId() == R.id.menu_refresh) {
-            refreshItemsFromTable();
-        }
-
-        return true;
-    }*/
 
 
     /**
