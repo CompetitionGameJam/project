@@ -140,7 +140,16 @@ public class MapsActivity extends FullScreenActivity implements
 
         // Get the Mobile Service Table instance to use
         mActionTable = mClient.getTable(ToDoItem.class);
+        try {
+            List<ToDoItem> q = mActionTable.where().field("id").eq(roomId).execute().get();
+            ToDoItem roomholder = q.get(0);
+            locBaseA = new LatLng(roomholder.getaBase1(), roomholder.getaBase2());
+            locBaseB = new LatLng(roomholder.getbBase1(), roomholder.getbBase2());
+            l = new LatLng(roomholder.getlBorder1(), roomholder.getlBorder2());
+            r = new LatLng(roomholder.getrBorder1(), roomholder.getrBorder2());
+        } catch (Exception e) {
 
+        }
 
         if (!isGooglePlayServicesAvailable()) {
             finish();
