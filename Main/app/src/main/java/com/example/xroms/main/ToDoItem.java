@@ -1,5 +1,7 @@
 package com.example.xroms.main;
 
+import com.google.android.gms.maps.model.LatLng;
+
 /**
  * Created by xRoms on 31.03.2018.
  */
@@ -19,6 +21,21 @@ public class ToDoItem {
     @com.google.gson.annotations.SerializedName("name")
     private String mName;
 
+    @com.google.gson.annotations.SerializedName("abase")
+    private LatLng aBase;
+
+    @com.google.gson.annotations.SerializedName("bbase")
+    private LatLng bBase;
+
+    @com.google.gson.annotations.SerializedName("lborder")
+    private LatLng lBorder;
+
+    @com.google.gson.annotations.SerializedName("rborder")
+    private LatLng rBorder;
+
+    @com.google.gson.annotations.SerializedName("position")
+    private LatLng mPosition;
+
 
     public ToDoItem() {
 
@@ -35,6 +52,31 @@ public class ToDoItem {
         this.setIsHost(isHost);
         this.setGameStarted(gameStarted);
     }
+
+    public void setPosition(LatLng pos) {
+        mPosition = pos;
+    }
+    public LatLng getPosition() {return mPosition;}
+
+
+    public void setaBase(LatLng base) {
+        aBase = base;
+    }
+    public LatLng getaBase() {return aBase;}
+
+    public void setbBase(LatLng base) {
+        bBase = base;
+    }
+    public LatLng getbBase() {return bBase;}
+    public void setlBorder(LatLng border) {
+        lBorder = border;
+    }
+    public LatLng getlBorder() {return lBorder;}
+
+    public void setrBorder(LatLng border) {
+        rBorder = border;
+    }
+    public LatLng getrBorder() {return rBorder;}
 
     public void setGameStarted(boolean gameStarted) {
         mGameStarted = gameStarted;

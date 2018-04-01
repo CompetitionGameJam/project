@@ -95,6 +95,10 @@ public class MapSetActivity extends FullScreenActivity implements
                     item.setGameStarted(true);
                     item.setIsHost(true);
                     item.setName(roomId);
+                    item.setaBase(a.getPosition());
+                    item.setbBase(b.getPosition());
+                    item.setlBorder(l.getPosition());
+                    item.setrBorder(r.getPosition());
                     mActionTable.update(item);
                 }
                 catch (final Exception e) {
