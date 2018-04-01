@@ -140,11 +140,6 @@ public class HostActivity extends Activity {
                     @Override
                     public void onClick(View v) {
                         final ToDoItem item = new ToDoItem();
-                        /*item.setName(sId);
-                        item.setIsHost(true);
-                        item.setId(sId);
-                        item.setGameStarted(true);
-                        mActionTable.update(item);*/
                         Intent newIntent = new Intent(HostActivity.this, MapSetActivity.class);
                         newIntent.putExtra("id", sId);
                         newIntent.putExtra("name", sId);
@@ -194,7 +189,7 @@ public class HostActivity extends Activity {
                     if (!results.isEmpty()) {
                         Log.e("tagged", "wht");
                         Intent jnewIntent = new Intent(HostActivity.this, MapsActivity.class);
-                        jnewIntent.putExtra("id", sId);
+                        jnewIntent.putExtra("id", name);
                         jnewIntent.putExtra("name", sId);
                         startActivity(jnewIntent);
                     }

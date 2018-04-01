@@ -138,6 +138,7 @@ public class MapsActivity extends FullScreenActivity implements
             Log.e("tagged", e.getMessage());
         }
 
+        Log.e("tagged", "kept you");
         // Get the Mobile Service Table instance to use
         mActionTable = mClient.getTable(ToDoItem.class);
         try {
@@ -148,6 +149,7 @@ public class MapsActivity extends FullScreenActivity implements
             l = new LatLng(roomholder.getlBorder1(), roomholder.getlBorder2());
             r = new LatLng(roomholder.getrBorder1(), roomholder.getrBorder2());
         } catch (Exception e) {
+            Log.e("tagged", e.getMessage());
 
         }
 
