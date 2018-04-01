@@ -59,6 +59,8 @@ import java.lang.reflect.Array;
 import java.util.HashMap;
 import java.util.List;
 
+import static java.lang.Math.abs;
+
 public class MapsActivity extends FullScreenActivity implements
         com.google.android.gms.location.LocationListener,
         GoogleApiClient.ConnectionCallbacks,
@@ -80,6 +82,7 @@ public class MapsActivity extends FullScreenActivity implements
     public static LatLng locBaseA, locBaseB, cur, l, r;
     Marker a, b, self;
     HashMap<String, Marker> players;
+    Button flag;
 
     private void onMarkersRefresh(String name, LatLng loc){
         Marker v = players.get(name);
@@ -138,6 +141,7 @@ public class MapsActivity extends FullScreenActivity implements
             Log.e("tagged", e.getMessage());
         }
 
+        flag = findViewById(R.id.btnflag);
         Log.e("tagged", "kept you");
         // Get the Mobile Service Table instance to use
         mActionTable = mClient.getTable(ToDoItem.class);
@@ -337,6 +341,12 @@ public class MapsActivity extends FullScreenActivity implements
     @Override
     public void onLocationChanged(Location location) {
         mCurrentLocation = location;
+        double l = location.getLatitude() - a.getPosition().latitude;
+        double lt = location.getLongitude() - a.getPosition().longitude;
+        if(abs(l)<0.0001 && abs(lt) < 0.0001){
+            flag.setVisibility(View.VISIBLE);
+            flag.setClickable(true);
+        }
         updateMap();
     }
 
