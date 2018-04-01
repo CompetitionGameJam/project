@@ -141,21 +141,14 @@ public class MapsActivity extends FullScreenActivity implements
         Log.e("tagged", "kept you");
         // Get the Mobile Service Table instance to use
         mActionTable = mClient.getTable(ToDoItem.class);
-        try {
-            List<ToDoItem> q = mActionTable.where().field("id").eq(roomId).execute().get();
-            ToDoItem roomholder = q.get(0);
-            locBaseA = new LatLng(roomholder.getaBase1(), roomholder.getaBase2());
-            locBaseB = new LatLng(roomholder.getbBase1(), roomholder.getbBase2());
-            l = new LatLng(roomholder.getlBorder1(), roomholder.getlBorder2());
-            r = new LatLng(roomholder.getrBorder1(), roomholder.getrBorder2());
-        } catch (Exception e) {
-            Log.e("tagged", e.getMessage());
-
-        }
+        Log.e("tagged", "omg");
+        setstart();
+        Log.e("tagged", "@@@@@");
 
         if (!isGooglePlayServicesAvailable()) {
             finish();
         }
+        Log.e("tagged", "aaaa");
         createLocationRequest();
         if (mGoogleApiClient == null) {
             mGoogleApiClient = new GoogleApiClient.Builder(this)
@@ -164,11 +157,13 @@ public class MapsActivity extends FullScreenActivity implements
                     .addOnConnectionFailedListener(this)
                     .build();
         }
+        Log.e("tagged", "huh");
 
         SupportMapFragment mapFragment =
                 (SupportMapFragment) getSupportFragmentManager()
                         .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
+        Log.e("tagged", "waiting");
         updateMap();
         new Thread(new Runnable() {
             @Override
@@ -189,6 +184,32 @@ public class MapsActivity extends FullScreenActivity implements
     private List<ToDoItem> refreshPlayers() throws ExecutionException, InterruptedException {
         return mActionTable.where().field("id").not().eq(yourname).and(mActionTable.where().field("name").eq(roomId)).execute().get();
     }
+
+    private void setstart() {
+        AsyncTask<Void, Void, Void> task = new AsyncTask<Void, Void, Void>(){
+            @Override
+            protected Void doInBackground(Void... params) {
+
+                try {
+                    List<ToDoItem> q = mActionTable.where().field("id").eq(roomId).execute().get();
+                    Log.e("tagged", Integer.toString(q.size()));
+                    ToDoItem roomholder = q.get(0);
+                    locBaseA = new LatLng(roomholder.getaBase1(), roomholder.getaBase2());
+                    locBaseB = new LatLng(roomholder.getbBase1(), roomholder.getbBase2());
+                    l = new LatLng(roomholder.getlBorder1(), roomholder.getlBorder2());
+                    r = new LatLng(roomholder.getrBorder1(), roomholder.getrBorder2());
+                } catch (Exception e) {
+                    Log.e("tagged", e.getMessage());
+
+                }
+
+                return null;
+            }
+        };
+
+        runAsyncTask(task);
+    }
+
 
     private void refreshItemsFromTable() {
         AsyncTask<Void, Void, Void> task = new AsyncTask<Void, Void, Void>(){
@@ -226,12 +247,7 @@ public class MapsActivity extends FullScreenActivity implements
     private void updateMap() {
         Log.d(TAG, "Map update initiated .............");
         if (null != mCurrentLocation) {
-            ToDoItem newitem =  new ToDoItem();
-            newitem.setName(roomId);
-            newitem.setId(yourname);
-            newitem.setPosition1(mCurrentLocation.getLatitude());
-            newitem.setPosition2(mCurrentLocation.getLongitude());
-            mActionTable.update(newitem);
+            updatePosition();
             LatLng cur_loc = new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude());
 
         } else {
@@ -272,6 +288,31 @@ public class MapsActivity extends FullScreenActivity implements
         uiSettings.setRotateGesturesEnabled(false);
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(cur,18));
         mMap.setLatLngBoundsForCameraTarget(new LatLngBounds(new LatLng(r.latitude,l.longitude), new LatLng(l.latitude,r.longitude)));
+    }
+
+
+    private void updatePosition() {
+        AsyncTask<Void, Void, Void> task = new AsyncTask<Void, Void, Void>(){
+            @Override
+            protected Void doInBackground(Void... params) {
+
+                try {
+                    ToDoItem newitem =  new ToDoItem();
+                    newitem.setName(roomId);
+                    newitem.setId(yourname);
+                    newitem.setPosition1(mCurrentLocation.getLatitude());
+                    newitem.setPosition2(mCurrentLocation.getLongitude());
+                    mActionTable.update(newitem);
+                } catch (final Exception e){
+                    Log.e( "tagged", "error2");
+                }
+
+                return null;
+            }
+        };
+
+        runAsyncTask(task);
+
     }
 
     protected void onStart() {
