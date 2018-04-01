@@ -2,18 +2,17 @@ package com.example.xroms.main;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.location.Location;
-import android.location.LocationListener;
-import android.location.LocationManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
-import android.support.v7.app.AppCompatActivity;
+import android.support.v7.app.AlertDialog;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -24,7 +23,6 @@ import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.PendingResult;
 import com.google.android.gms.common.api.Status;
-import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -36,20 +34,21 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MapStyleOptions;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
-import com.google.android.gms.tasks.OnSuccessListener;
+
+import java.util.Objects;
 
 public class MapSetActivity extends FullScreenActivity implements
         com.google.android.gms.location.LocationListener,
         GoogleApiClient.ConnectionCallbacks,
-        GoogleApiClient.OnConnectionFailedListener, OnMapReadyCallback {
+        GoogleApiClient.OnConnectionFailedListener, OnMapReadyCallback, GoogleMap.OnMarkerDragListener {
 
-    private static final String TAG = MapsActivity.class.getSimpleName();
+    private static final String TAG = MapSetActivity.class.getSimpleName();
     private GoogleApiClient mGoogleApiClient;
     Location mCurrentLocation;
     LocationRequest mLocationRequest;
     private GoogleMap mMap;
-    Marker self, a, b;
-    private LatLng spb = new LatLng(59,30);
+    Marker self, a, b, l, r;
+    private LatLng spb = new LatLng(59, 30);
 
     @SuppressLint("RestrictedApi")
     protected void createLocationRequest() {
@@ -66,6 +65,10 @@ public class MapSetActivity extends FullScreenActivity implements
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_map_set);
         setMContentView(findViewById(R.id.llContentMS));
+
+        if (PackageManager.PERMISSION_GRANTED != ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION))
+            requestWritePermission(this);
+
 
         Button start = findViewById(R.id.btnStart);
         start.setOnClickListener(new View.OnClickListener() {
@@ -98,9 +101,39 @@ public class MapSetActivity extends FullScreenActivity implements
     private void updateMap() {
         Log.d(TAG, "Map update initiated .............");
         if (null != mCurrentLocation) {
-            LatLng cur_loc = new LatLng(mCurrentLocation.getLatitude(),mCurrentLocation.getLongitude());
-            self = mMap.addMarker(new MarkerOptions().position(cur_loc));
-            mMap.moveCamera(CameraUpdateFactory.newLatLng(cur_loc));
+            LatLng cur_loc = new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude());
+            self.setPosition(cur_loc);
+
+
+            if (a == null) {
+                a = mMap.addMarker(new MarkerOptions().position(new LatLng(cur_loc.latitude, cur_loc.longitude + 0.001))
+                        .draggable(true)
+                        .icon(BitmapDescriptorFactory.fromResource(R.mipmap.ic_base_a))
+                );
+                mMap.moveCamera(CameraUpdateFactory.newLatLng(cur_loc));
+                mMap.moveCamera(CameraUpdateFactory.zoomTo(18));
+                MapsActivity.cur = cur_loc;
+
+                l = mMap.addMarker(new MarkerOptions().position(new LatLng(cur_loc.latitude+0.0003, cur_loc.longitude - 0.001))
+                        .draggable(true)
+                        .icon(BitmapDescriptorFactory.fromResource(R.mipmap.ic_angle_l))
+                );
+                MapsActivity.locBaseA = a.getPosition();
+                MapsActivity.l = l.getPosition();
+            }
+            if(b == null){
+                b = mMap.addMarker(new MarkerOptions().position(new LatLng(cur_loc.latitude, cur_loc.longitude - 0.001))
+                .draggable(true)
+                .icon(BitmapDescriptorFactory.fromResource(R.mipmap.ic_base_b)));
+
+                r = mMap.addMarker(new MarkerOptions().position(new LatLng(cur_loc.latitude-0.0003, cur_loc.longitude + 0.001))
+                        .draggable(true)
+                        .icon(BitmapDescriptorFactory.fromResource(R.mipmap.ic_angle_r))
+                );
+
+                MapsActivity.locBaseB = b.getPosition();
+                MapsActivity.r = r.getPosition();
+            }
         } else {
             Log.d(TAG, "location is null ...............");
         }
@@ -129,7 +162,8 @@ public class MapSetActivity extends FullScreenActivity implements
                 .flat(true)
         );
         googleMap.moveCamera(CameraUpdateFactory.newLatLng(spb));
-        googleMap.moveCamera(CameraUpdateFactory.zoomTo(13));
+        googleMap.moveCamera(CameraUpdateFactory.zoomTo(6));
+        googleMap.setOnMarkerDragListener( this);
     }
 
     protected void onStart() {
@@ -142,18 +176,10 @@ public class MapSetActivity extends FullScreenActivity implements
     }
 
     protected void startLocationUpdates() {
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-            return;
-        }
-        PendingResult<Status> pendingResult = LocationServices.FusedLocationApi.requestLocationUpdates(
-                mGoogleApiClient, mLocationRequest, (com.google.android.gms.location.LocationListener) this);
+
+        Log.d(TAG, "Location requsest sending..............: ");
+        @SuppressLint("MissingPermission") PendingResult<Status> pendingResult = LocationServices.FusedLocationApi.requestLocationUpdates(
+                mGoogleApiClient, mLocationRequest, this);
         Log.d(TAG, "Location update started ..............: ");
     }
 
@@ -164,11 +190,11 @@ public class MapSetActivity extends FullScreenActivity implements
     }
 
 
-
     protected void onStop() {
         super.onStop();
         mGoogleApiClient.disconnect();
     }
+
     private boolean isGooglePlayServicesAvailable() {
         int status = GooglePlayServicesUtil.isGooglePlayServicesAvailable(this);
         if (ConnectionResult.SUCCESS == status) {
@@ -190,6 +216,7 @@ public class MapSetActivity extends FullScreenActivity implements
         super.onPause();
         stopLocationUpdates();
     }
+
     @Override
     public void onResume() {
         super.onResume();
@@ -200,8 +227,10 @@ public class MapSetActivity extends FullScreenActivity implements
 
 
     protected void stopLocationUpdates() {
-        LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient,  this);
+        if (mGoogleApiClient.isConnected())
+            LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
     }
+
     @Override
     public void onConnectionSuspended(int i) {
 
@@ -210,5 +239,47 @@ public class MapSetActivity extends FullScreenActivity implements
     @Override
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
 
+    }
+
+    private static void requestWritePermission(final Context context) {
+        if (ActivityCompat.shouldShowRequestPermissionRationale((Activity) context, Manifest.permission.ACCESS_FINE_LOCATION)) {
+            new AlertDialog.Builder(context)
+                    .setMessage("This app needs permission to use The phone Camera in order to activate the Scanner")
+                    .setPositiveButton("Allow", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            ActivityCompat.requestPermissions((Activity) context, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1);
+                        }
+                    }).show();
+
+        } else {
+            ActivityCompat.requestPermissions((Activity) context, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1);
+        }
+    }
+
+    @Override
+    public void onMarkerDragStart(Marker marker) {
+
+    }
+
+    @Override
+    public void onMarkerDrag(Marker marker) {
+
+    }
+
+    @Override
+    public void onMarkerDragEnd(Marker marker) {
+        if(Objects.equals(marker.getId(), a.getId())){
+            MapsActivity.locBaseA = marker.getPosition();
+        }
+        if(Objects.equals(marker.getId(), b.getId())){
+            MapsActivity.locBaseB = marker.getPosition();
+        }
+        if(Objects.equals(marker.getId(), l.getId())){
+            MapsActivity.l = marker.getPosition();
+        }
+        if(Objects.equals(marker.getId(), r.getId())){
+            MapsActivity.r = marker.getPosition();
+        }
     }
 }

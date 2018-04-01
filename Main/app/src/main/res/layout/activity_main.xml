@@ -46,7 +46,8 @@
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:background="@drawable/button_green"
-                    android:text="Play" />
+                    android:text="Play"
+                    tools:textColor="@color/white" />
 
                 <Space
                     android:layout_width="match_parent"
@@ -59,7 +60,8 @@
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:background="@drawable/button_blue"
-                    android:text="Rules" />
+                    android:text="Rules"
+                    tools:textColor="@color/white" />
 
             </LinearLayout>
 
