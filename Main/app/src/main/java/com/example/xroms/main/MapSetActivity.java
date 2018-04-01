@@ -9,6 +9,8 @@ import android.content.res.Resources;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -17,27 +19,50 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GooglePlayServicesUtil;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.PendingResult;
+import com.google.android.gms.common.api.Status;
 import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MapStyleOptions;
+import com.google.android.gms.maps.model.Marker;
+import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnSuccessListener;
 
-public class MapSetActivity extends FullScreenActivity implements OnMapReadyCallback {
+public class MapSetActivity extends FullScreenActivity implements
+        com.google.android.gms.location.LocationListener,
+        GoogleApiClient.ConnectionCallbacks,
+        GoogleApiClient.OnConnectionFailedListener, OnMapReadyCallback {
 
     private static final String TAG = MapsActivity.class.getSimpleName();
-    private FusedLocationProviderClient mFusedLocationClient;
-    static LatLng baseA, baseB, loc;
-    static Float zoom;
-    private Location location;
-    private LatLng cur_loc;
+    private GoogleApiClient mGoogleApiClient;
+    Location mCurrentLocation;
+    LocationRequest mLocationRequest;
+    private GoogleMap mMap;
+    Marker self, a, b;
+    private LatLng spb = new LatLng(59,30);
+
+    @SuppressLint("RestrictedApi")
+    protected void createLocationRequest() {
+        mLocationRequest = new LocationRequest();
+        mLocationRequest.setInterval(10000);
+        mLocationRequest.setFastestInterval(5000);
+        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+    }
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        Log.d(TAG, "onCreate ...............................");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_map_set);
         setMContentView(findViewById(R.id.llContentMS));
@@ -50,18 +75,40 @@ public class MapSetActivity extends FullScreenActivity implements OnMapReadyCall
                 startActivity(myIntent);
             }
         });
-
-        mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+        if (!isGooglePlayServicesAvailable()) {
+            finish();
+        }
+        createLocationRequest();
+        if (mGoogleApiClient == null) {
+            mGoogleApiClient = new GoogleApiClient.Builder(this)
+                    .addApi(LocationServices.API)
+                    .addConnectionCallbacks(this)
+                    .addOnConnectionFailedListener(this)
+                    .build();
+        }
 
         SupportMapFragment mapFragment =
                 (SupportMapFragment) getSupportFragmentManager()
-                        .findFragmentById(R.id.map);
+                        .findFragmentById(R.id.mapSet);
         mapFragment.getMapAsync(this);
+        updateMap();
     }
 
 
+    private void updateMap() {
+        Log.d(TAG, "Map update initiated .............");
+        if (null != mCurrentLocation) {
+            LatLng cur_loc = new LatLng(mCurrentLocation.getLatitude(),mCurrentLocation.getLongitude());
+            self = mMap.addMarker(new MarkerOptions().position(cur_loc));
+            mMap.moveCamera(CameraUpdateFactory.newLatLng(cur_loc));
+        } else {
+            Log.d(TAG, "location is null ...............");
+        }
+    }
+
     @Override
     public void onMapReady(GoogleMap googleMap) {
+        mMap = googleMap;
         try {
             // Customise the styling of the base map using a JSON object defined
             // in a raw resource file.
@@ -76,6 +123,25 @@ public class MapSetActivity extends FullScreenActivity implements OnMapReadyCall
             Log.e(TAG, "Can't find style. Error: ", e);
         }
 
+        self = googleMap.addMarker(new MarkerOptions()
+                .position(spb)
+                .icon(BitmapDescriptorFactory.fromResource(R.mipmap.ic_cowboy))
+                .flat(true)
+        );
+        googleMap.moveCamera(CameraUpdateFactory.newLatLng(spb));
+        googleMap.moveCamera(CameraUpdateFactory.zoomTo(13));
+    }
+
+    protected void onStart() {
+        super.onStart();
+        if (mGoogleApiClient.isConnected()) {
+            startLocationUpdates();
+            Log.d(TAG, "Location update resumed .....................");
+        } else
+            mGoogleApiClient.connect();
+    }
+
+    protected void startLocationUpdates() {
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             // TODO: Consider calling
             //    ActivityCompat#requestPermissions
@@ -86,17 +152,63 @@ public class MapSetActivity extends FullScreenActivity implements OnMapReadyCall
             // for ActivityCompat#requestPermissions for more details.
             return;
         }
-        mFusedLocationClient.getLastLocation()
-                .addOnSuccessListener(this, new OnSuccessListener<Location>() {
-                    @Override
-                    public void onSuccess(Location location) {
-                        // Got last known location. In some rare situations this can be null.
-                        if (location != null) {
-                            // Logic to handle location object
-                        }
-                    }
-                });
-        googleMap.moveCamera(CameraUpdateFactory.newLatLng(new LatLng(59,30)));
-        googleMap.moveCamera(CameraUpdateFactory.zoomTo(10));
+        PendingResult<Status> pendingResult = LocationServices.FusedLocationApi.requestLocationUpdates(
+                mGoogleApiClient, mLocationRequest, (com.google.android.gms.location.LocationListener) this);
+        Log.d(TAG, "Location update started ..............: ");
+    }
+
+    @Override
+    public void onLocationChanged(Location location) {
+        mCurrentLocation = location;
+        updateMap();
+    }
+
+
+
+    protected void onStop() {
+        super.onStop();
+        mGoogleApiClient.disconnect();
+    }
+    private boolean isGooglePlayServicesAvailable() {
+        int status = GooglePlayServicesUtil.isGooglePlayServicesAvailable(this);
+        if (ConnectionResult.SUCCESS == status) {
+            return true;
+        } else {
+            GooglePlayServicesUtil.getErrorDialog(status, this, 0).show();
+            return false;
+        }
+    }
+
+    @Override
+    public void onConnected(@Nullable Bundle bundle) {
+        Log.d(TAG, "onConnected - isConnected ...............: " + mGoogleApiClient.isConnected());
+        startLocationUpdates();
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        stopLocationUpdates();
+    }
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (mGoogleApiClient.isConnected()) {
+            startLocationUpdates();
+        }
+    }
+
+
+    protected void stopLocationUpdates() {
+        LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient,  this);
+    }
+    @Override
+    public void onConnectionSuspended(int i) {
+
+    }
+
+    @Override
+    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
+
     }
 }
